@@ -122,19 +122,26 @@
     height: 70px;
 }
 
+/* ─── Picker backdrop (transparent, closes picker on outside click) ── */
+.picker-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 499;
+    background: transparent;
+}
+
 /* ─── Card grid ───────────────────────────────────────────── */
 
 /*
-   Auto-fill with 220px columns. Each row is also 220px.
-   Doc  = 1 col × 1 row  (220 × 220)
-   Table = 2 cols × 2 rows (440 × 440)
+   220px columns. Each base row is 220px.
+   Doc   = 1 col × 1 row  → 220 × 220 px
+   Table = 2 cols × 2 rows → 461 × 461 px (220 + gap + 220)
 */
 .card-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 220px));
+    grid-template-columns: repeat(auto-fill, 220px);
     grid-auto-rows: 220px;
     gap: 1rem;
-    align-items: start;
 }
 
 /* ─── Individual cards ────────────────────────────────────── */
@@ -145,7 +152,6 @@
     overflow: hidden;
     position: relative;
     transition: box-shadow 0.2s, border-color 0.2s;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
 }
@@ -155,16 +161,17 @@
     border-color: rgba(255,255,255,0.28);
 }
 
-/* Doc: 1 col × 1 row — default grid cell */
+/* Doc: 1 col × 1 row */
 .card-doc {
     grid-column: span 1;
     grid-row: span 1;
 }
 
-/* Table: 2 cols × 2 rows */
+/* Table: 2 cols × 2 rows — height = 2×220px + 1 gap (1rem = 16px) */
 .card-table {
     grid-column: span 2;
     grid-row: span 2;
+    height: calc(220px * 2 + 1rem);
 }
 
 /* ─── Delete button ───────────────────────────────────────── */
@@ -326,6 +333,39 @@
 
 .dialog-error {
     color: #ff8080;
+}
+
+.dialog-error p {
+    margin: 0 0 0.5rem;
+}
+
+.dialog-error-detail {
+    font-size: 0.78rem;
+    color: rgba(255, 160, 160, 0.8);
+    line-height: 1.6;
+}
+
+.dialog-error code {
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 0.75rem;
+}
+
+.btn-retry {
+    margin-top: 0.5rem;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 5px;
+    color: #d7d7d7;
+    padding: 0.3rem 0.8rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.btn-retry:hover {
+    background: rgba(255,255,255,0.18);
+    color: white;
 }
 
 .tag-search {
