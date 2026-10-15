@@ -1,0 +1,134 @@
+@using PaperlessDashBlazor.Services
+@inject PageService PageService
+@inject NavigationManager Navigation
+@implements IDisposable
+@rendermode InteractiveServer
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">PaperlessDashBlazor</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="nav flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="counter">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="weather">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+            </NavLink>
+        </div>
+
+        @* Dynamic pages loaded from DB *@
+        @foreach (var page in _pages)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="@($"pages/{page.Slug}")">
+                    <span class="bi bi-file-earmark-nav-menu" aria-hidden="true"></span> @(page.Title)
+                </NavLink>
+            </div>
+        }
+    </nav>
+
+    @* Add Page button pinned at the bottom *@
+    <div class="add-page-section px-3">
+        <button class="btn-add-page" @onclick="OpenDialog" @onclick:stopPropagation="true">
+            <span class="bi bi-plus-circle-nav-menu" aria-hidden="true"></span> Add Page
+        </button>
+    </div>
+</div>
+
+@* Inline modal dialog *@
+@if (_showDialog)
+{
+    <div class="modal-backdrop" @onclick="CloseDialog"></div>
+    <div class="add-page-modal" @onclick:stopPropagation="true">
+        <h5>New Page</h5>
+        <input @ref="_inputRef"
+               type="text"
+               class="page-title-input"
+               placeholder="Page title..."
+               @bind="_newPageTitle"
+               @bind:event="oninput"
+               @onkeydown="HandleKeyDown" />
+        <div class="modal-actions">
+            <button class="btn-cancel" @onclick="CloseDialog">Cancel</button>
+            <button class="btn-create" @onclick="CreatePage" disabled="@(string.IsNullOrWhiteSpace(_newPageTitle) || _saving)">
+                @if (_saving) { <span>Saving…</span> } else { <span>Create</span> }
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _showDialog;
+    private bool _saving;
+    private string _newPageTitle = string.Empty;
+    private ElementReference _inputRef;
+    private List<DynamicPageEntry> _pages = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageService.OnChange += OnPageListChanged;
+        await LoadPagesAsync();
+    }
+
+    private async Task LoadPagesAsync()
+    {
+        _pages = await PageService.GetPagesAsync();
+        StateHasChanged();
+    }
+
+    private void OnPageListChanged()
+    {
+        // Re-query DB on change notification
+        InvokeAsync(LoadPagesAsync);
+    }
+
+    private void OpenDialog()
+    {
+        _newPageTitle = string.Empty;
+        _showDialog = true;
+    }
+
+    private void CloseDialog()
+    {
+        _showDialog = false;
+        _newPageTitle = string.Empty;
+    }
+
+    private async Task CreatePage()
+    {
+        if (string.IsNullOrWhiteSpace(_newPageTitle) || _saving) return;
+
+        _saving = true;
+        var page = await PageService.AddPageAsync(_newPageTitle.Trim());
+        _saving = false;
+        CloseDialog();
+        Navigation.NavigateTo($"pages/{page.Slug}");
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") _ = CreatePage();
+        else if (e.Key == "Escape") CloseDialog();
+    }
+
+    public void Dispose()
+    {
+        PageService.OnChange -= OnPageListChanged;
+    }
+}

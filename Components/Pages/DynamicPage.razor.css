@@ -1,0 +1,445 @@
+/* ─── Page layout ─────────────────────────────────────────── */
+.dynamic-page {
+    padding: 1.5rem;
+    min-height: 100%;
+}
+
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 600;
+}
+
+.page-empty-hint {
+    color: #888;
+    font-style: italic;
+}
+
+/* ─── Add Card button ─────────────────────────────────────── */
+.add-card-wrapper {
+    position: relative;
+}
+
+.btn-add-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 1rem;
+    background: #1a1a2e;
+    color: #d7d7d7;
+    border: 1px dashed rgba(255,255,255,0.35);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.btn-add-card:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.6);
+    color: white;
+}
+
+/* ─── Size picker popover ─────────────────────────────────── */
+.size-picker {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: #1e1e2e;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 10px;
+    padding: 1rem;
+    width: 230px;
+    z-index: 500;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+.picker-label {
+    margin: 0 0 0.75rem;
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.size-options {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.size-option {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    padding: 0.75rem 0.5rem;
+    cursor: pointer;
+    color: #d7d7d7;
+    font-size: 0.8rem;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.size-option:hover {
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.5);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.size-option small {
+    color: rgba(255,255,255,0.4);
+    font-size: 0.7rem;
+}
+
+/* Thumbnail previews inside picker */
+.size-preview {
+    border-radius: 4px;
+    background: rgba(255,255,255,0.25);
+}
+
+/* Doc: 1×1 — small square thumbnail */
+.doc-preview {
+    width: 44px;
+    height: 44px;
+}
+
+/* Table: 2×2 — larger square thumbnail */
+.table-preview {
+    width: 70px;
+    height: 70px;
+}
+
+/* ─── Card grid ───────────────────────────────────────────── */
+
+/*
+   Auto-fill with 220px columns. Each row is also 220px.
+   Doc  = 1 col × 1 row  (220 × 220)
+   Table = 2 cols × 2 rows (440 × 440)
+*/
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 220px));
+    grid-auto-rows: 220px;
+    gap: 1rem;
+    align-items: start;
+}
+
+/* ─── Individual cards ────────────────────────────────────── */
+.dash-card {
+    border-radius: 10px;
+    background: #1e1e2e;
+    border: 1px solid rgba(255,255,255,0.12);
+    overflow: hidden;
+    position: relative;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.dash-card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    border-color: rgba(255,255,255,0.28);
+}
+
+/* Doc: 1 col × 1 row — default grid cell */
+.card-doc {
+    grid-column: span 1;
+    grid-row: span 1;
+}
+
+/* Table: 2 cols × 2 rows */
+.card-table {
+    grid-column: span 2;
+    grid-row: span 2;
+}
+
+/* ─── Delete button ───────────────────────────────────────── */
+.btn-delete-card {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0);
+    border: none;
+    color: rgba(255,255,255,0);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+    z-index: 10;
+    padding: 0;
+}
+
+.dash-card:hover .btn-delete-card {
+    background: rgba(220, 50, 50, 0.25);
+    color: rgba(255, 100, 100, 0.9);
+}
+
+.btn-delete-card:hover {
+    background: rgba(220, 50, 50, 0.7) !important;
+    color: white !important;
+}
+
+/* ─── Doc card content ────────────────────────────────────── */
+.card-tag-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.4rem 0.6rem;
+    flex-shrink: 0;
+}
+
+.card-tag-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: rgba(0,0,0,0.75);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 2.5rem);
+}
+
+.card-doc-count {
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: rgba(0,0,0,0.25);
+    color: white;
+    border-radius: 10px;
+    padding: 1px 6px;
+    flex-shrink: 0;
+}
+
+.card-doc-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.3rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.doc-item {
+    display: block;
+    font-size: 0.72rem;
+    color: #b0c4de;
+    text-decoration: none;
+    padding: 0.25rem 0.3rem;
+    border-radius: 4px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    transition: background 0.1s, color 0.1s;
+}
+
+.doc-item:hover {
+    background: rgba(255,255,255,0.1);
+    color: white;
+}
+
+.no-docs,
+.loading-docs {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.35);
+    font-style: italic;
+    padding: 0.5rem 0.3rem;
+}
+
+/* ─── Placeholder for Table cards ────────────────────────── */
+.card-inner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-placeholder {
+    color: rgba(255,255,255,0.2);
+    font-size: 0.85rem;
+    font-style: italic;
+    user-select: none;
+}
+
+/* ─── Doc dialog ──────────────────────────────────────────── */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 998;
+}
+
+.doc-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1e1e2e;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    padding: 1.5rem;
+    width: 380px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    z-index: 999;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    color: white;
+}
+
+.doc-dialog h5 {
+    margin: 0 0 0.3rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.dialog-hint {
+    margin: 0 0 1rem;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.5);
+}
+
+.dialog-loading,
+.dialog-error {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 1rem;
+}
+
+.dialog-error {
+    color: #ff8080;
+}
+
+.tag-search {
+    width: 100%;
+    padding: 0.4rem 0.7rem;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.07);
+    color: white;
+    font-size: 0.85rem;
+    box-sizing: border-box;
+    margin-bottom: 0.5rem;
+    outline: none;
+}
+
+.tag-search:focus {
+    border-color: rgba(255,255,255,0.5);
+}
+
+.tag-search::placeholder {
+    color: rgba(255,255,255,0.3);
+}
+
+.tag-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 1rem;
+    max-height: 300px;
+}
+
+.tag-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: none;
+    color: #d7d7d7;
+    cursor: pointer;
+    font-size: 0.85rem;
+    text-align: left;
+    transition: background 0.1s, border-color 0.1s;
+}
+
+.tag-item:hover {
+    background: rgba(255,255,255,0.07);
+}
+
+.tag-item.selected {
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.4);
+    color: white;
+}
+
+.tag-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.tag-label {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.tag-count {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.35);
+    flex-shrink: 0;
+}
+
+.dialog-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.btn-cancel {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 6px;
+    color: #d7d7d7;
+    padding: 0.4rem 1rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.btn-cancel:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+.btn-create {
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 6px;
+    color: white;
+    padding: 0.4rem 1.2rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.btn-create:hover:not(:disabled) {
+    background: rgba(255,255,255,0.3);
+}
+
+.btn-create:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
