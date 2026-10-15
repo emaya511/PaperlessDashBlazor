@@ -9,7 +9,7 @@
 {
     <PageTitle>@_page.Title</PageTitle>
 
-    <div class="dynamic-page" @onclick="ClosePicker">
+    <div class="dynamic-page">
 
         <div class="page-header">
             <h1>@_page.Title</h1>
@@ -26,15 +26,17 @@
 
                 @if (_showPicker)
                 {
+                    @* Transparent backdrop to close picker on outside click *@
+                    <div class="picker-backdrop" @onclick="ClosePicker"></div>
                     <div class="size-picker">
                         <p class="picker-label">Choose card type</p>
                         <div class="size-options">
-                            <button class="size-option" @onclick="OpenDocDialog">
+                            <button class="size-option" @onclick="OpenDocDialog" @onclick:stopPropagation="true">
                                 <div class="size-preview doc-preview"></div>
                                 <span>Doc</span>
                                 <small>1 × 1</small>
                             </button>
-                            <button class="size-option" @onclick="AddTableCard">
+                            <button class="size-option" @onclick="AddTableCard" @onclick:stopPropagation="true">
                                 <div class="size-preview table-preview"></div>
                                 <span>Table</span>
                                 <small>2 × 2</small>
@@ -140,7 +142,15 @@ else
         }
         else if (_tags.Count == 0)
         {
-            <p class="dialog-error">⚠ Could not load tags. Check your <code>.env</code> connection settings.</p>
+            <div class="dialog-error">
+                <p>⚠ Could not load tags from Paperless-NGX.</p>
+                <p class="dialog-error-detail">
+                    Check that your <code>.env</code> has the correct URL and token:<br/>
+                    <code>PAPERLESS_URL=https://your-server/</code><br/>
+                    <code>PAPERLESS_API_TOKEN=your_token</code>
+                </p>
+                <button class="btn-retry" @onclick="RetryLoadTags">↺ Retry</button>
+            </div>
         }
         else
         {
@@ -261,6 +271,15 @@ else
     {
         _showDocDialog = false;
         _selectedTag = null;
+    }
+
+    private async Task RetryLoadTags()
+    {
+        _tagsLoading = true;
+        StateHasChanged();
+        _tags = await PaperlessService.GetTagsAsync();
+        _tagsLoading = false;
+        StateHasChanged();
     }
 
     private async Task ConfirmDocCard()

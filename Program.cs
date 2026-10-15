@@ -39,8 +39,12 @@ builder.Services.AddScoped<PageService>();
 var paperlessUrl = builder.Configuration["PAPERLESS_URL"]
                    ?? Environment.GetEnvironmentVariable("PAPERLESS_URL")
                    ?? "http://localhost:8000";
+
+// Accept both PAPERLESS_API_KEY and PAPERLESS_API_TOKEN
 var paperlessKey = builder.Configuration["PAPERLESS_API_KEY"]
                    ?? Environment.GetEnvironmentVariable("PAPERLESS_API_KEY")
+                   ?? builder.Configuration["PAPERLESS_API_TOKEN"]
+                   ?? Environment.GetEnvironmentVariable("PAPERLESS_API_TOKEN")
                    ?? string.Empty;
 
 builder.Services.AddHttpClient("paperless", client =>
