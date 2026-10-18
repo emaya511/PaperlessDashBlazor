@@ -45,6 +45,17 @@ public class PageService(IDbContextFactory<AppDbContext> dbFactory)
         return page;
     }
 
+    /// <summary>Delete a page and all its cards.</summary>
+    public async Task DeletePageAsync(Guid pageId)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync();
+        var page = await db.Pages.FindAsync(pageId);
+        if (page is null) return;
+        db.Pages.Remove(page);   // cascade deletes cards via EF config
+        await db.SaveChangesAsync();
+        OnChange?.Invoke();
+    }
+
     // ── Cards ────────────────────────────────────────────────────────────────
 
     /// <summary>Add a Doc card linked to a Paperless-NGX tag.</summary>
