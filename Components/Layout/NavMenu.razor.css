@@ -51,25 +51,81 @@
     padding-bottom: 0.5rem;
 }
 
-    .nav-item:first-of-type {
-        padding-top: 1rem;
-    }
+/* Row wrapper for dynamic pages — relative so delete btn can overlay */
+.nav-page-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding-right: 0;
+    width: 100%;          /* fill the sidebar column */
+    overflow: hidden;     /* never let the row itself overflow */
+}
 
-    .nav-item:last-of-type {
-        padding-bottom: 1rem;
-    }
+.nav-page-link {
+    flex: 1;
+    min-width: 0;
+    width: 0;             /* forces flex:1 to respect container boundary */
+    padding-right: 2rem !important;  /* space for the delete button */
+}
 
-    .nav-item ::deep .nav-link {
-        color: #d7d7d7;
-        background: none;
-        border: none;
-        border-radius: 4px;
-        height: 3rem;
-        display: flex;
-        align-items: center;
-        line-height: 3rem;
-        width: 100%;
-    }
+/* Truncate the title text — must be on the span, not the flex <a> */
+.nav-link-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;       /* block so overflow/text-overflow work */
+    width: 100%;
+}
+
+/* Delete button — absolutely overlaid at the right of the row */
+.btn-delete-page {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.15s, color 0.15s;
+    z-index: 5;
+}
+
+.nav-page-row:hover .btn-delete-page {
+    color: rgba(255, 120, 120, 0.85);
+}
+
+.btn-delete-page:hover {
+    background: rgba(220, 50, 50, 0.4) !important;
+    color: white !important;
+}
+
+.nav-item:first-of-type {
+    padding-top: 1rem;
+}
+
+.nav-item:last-of-type {
+    padding-bottom: 1rem;
+}
+
+.nav-item ::deep .nav-link {
+    color: #d7d7d7;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    line-height: 3rem;
+    width: 100%;
+}
 
 .nav-item ::deep a.active {
     background-color: rgba(255,255,255,0.37);
