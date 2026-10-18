@@ -59,16 +59,15 @@ public class PageService(IDbContextFactory<AppDbContext> dbFactory)
     // ── Cards ────────────────────────────────────────────────────────────────
 
     /// <summary>Add a Doc card linked to a Paperless-NGX tag.</summary>
-    public async Task AddDocCardAsync(Guid pageId, int tagId, string tagName, string tagColour)
+    public async Task AddDocCardAsync(Guid pageId, int docId, string docName)
     {
         await using var db = await dbFactory.CreateDbContextAsync();
         db.Cards.Add(new CardEntry
         {
             PageId    = pageId,
             Size      = CardSize.Doc,
-            TagId     = tagId,
-            TagName   = tagName,
-            TagColour = tagColour
+            DocId     = docId,
+            DocName   = docName
         });
         await db.SaveChangesAsync();
         OnChange?.Invoke();
