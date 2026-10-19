@@ -100,6 +100,18 @@
                                     <span class="loading-docs">Loading…</span>
                                 }
                             </div>
+
+                            @* Thumbnail *@
+                            @if (_thumbMap.TryGetValue(card.Id, out var thumb))
+                            {
+                                <div class="card-thumb-wrapper">
+                                    <img class="card-thumb" src="@thumb" alt="@(card.DocName ?? "document")" />
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="card-thumb-wrapper card-thumb-loading"></div>
+                            }
                         }
                         else
                         {
@@ -210,6 +222,8 @@ else
     private Dictionary<Guid, int>                     _docCounts = [];
 
     private Dictionary<Guid, PaperlessDocument> _cardDocMap = [];
+    // card.Id → base64 data URI of the document thumbnail
+    private Dictionary<Guid, string>            _thumbMap   = [];
 
     private IEnumerable<PaperlessTag> FilteredTags =>
         string.IsNullOrWhiteSpace(_tagSearch)
@@ -250,13 +264,23 @@ else
     private async Task LoadDocCardAsync(CardEntry card)
     {
         if (!card.DocId.HasValue) return;
-        var (docs, total) = await PaperlessService.GetDocumentsByTagAsync(card.DocId.Value);
-        _docMap[card.Id] = docs;
+
+        // Fetch doc metadata and thumbnail in parallel
+        var docTask   = PaperlessService.GetDocumentByIdAsync(card.DocId.Value);
+        var thumbTask = PaperlessService.GetDocumentThumbnailAsync(card.DocId.Value);
+        var tagsTask  = PaperlessService.GetDocumentsByTagAsync(card.DocId.Value);
+
+        await Task.WhenAll(docTask, thumbTask, tagsTask);
+
+        var (docs, total) = tagsTask.Result;
+        _docMap[card.Id]    = docs;
         _docCounts[card.Id] = total;
 
-        var doc = await PaperlessService.GetDocumentByIdAsync(card.DocId.Value);
-        if (doc is not null)
-            _cardDocMap[card.Id] = doc;
+        if (docTask.Result is not null)
+            _cardDocMap[card.Id] = docTask.Result;
+
+        if (thumbTask.Result is not null)
+            _thumbMap[card.Id] = thumbTask.Result;
     }
 
     private void Refresh() => InvokeAsync(LoadPageAsync);
