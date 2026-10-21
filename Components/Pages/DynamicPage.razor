@@ -55,71 +55,30 @@
             <div class="card-grid">
                 @foreach (var card in _page.Cards)
                 {
-                    <div class="dash-card @(card.Size == CardSize.Table ? "card-table" : "card-doc")">
-
-                        @* Delete button *@
-                        <button class="btn-delete-card" title="Remove card"
-                                @onclick="() => DeleteCard(card.Id)"
-                                @onclick:stopPropagation="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                            </svg>
-                        </button>
-
-                        @if (card.Size == CardSize.Doc)
+                    @if (card.Size == CardSize.Doc)
+                    {
+                        @if (_docCards.TryGetValue(card.Id, out var docCard))
                         {
-                            @* Doc card: tag header + document list *@
-                            <div class="card-tag-header">
-                                <span class="card-tag-name">@(card.DocName ?? "Untagged")</span>
-                                @if (_docCounts.TryGetValue(card.Id, out var cnt))
-                                {
-                                    <span class="card-doc-count">@cnt</span>
-                                }
-                            </div>
-                            <div class="card-doc-list">
-                                @if (_cardDocMap.TryGetValue(card.Id, out PaperlessDocument? doc))
-                                {
-                                    @if (doc.Id == 0)
-                                    {
-                                        <span class="no-docs">No documents</span>
-                                    }
-                                    else
-                                    {
-                                        <a class="doc-item"
-                                        href="@PaperlessService.GetDocumentUrl(doc.Id)"
-                                        target="_blank"
-                                        title="@doc.Title">
-                                        @doc.Title
-                                        </a>
-                                        
-                                    }
-                                }
-                                else
-                                {
-                                    <span class="loading-docs">Loading…</span>
-                                }
-                            </div>
-
-                            @* Thumbnail *@
-                            @if (_thumbMap.TryGetValue(card.Id, out var thumb))
-                            {
-                                <div class="card-thumb-wrapper">
-                                    <img class="card-thumb" src="@thumb" alt="@(card.DocName ?? "document")" />
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="card-thumb-wrapper card-thumb-loading"></div>
-                            }
+                            <DocCard Card="docCard"
+                                     OnDelete="() => DeleteCard(card.Id)" />
                         }
-                        else
-                        {
+                    }
+                    else
+                    {
+                        <div class="dash-card card-table">
+                            <button class="btn-delete-card" title="Remove card"
+                                    @onclick="() => DeleteCard(card.Id)"
+                                    @onclick:stopPropagation="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                </svg>
+                            </button>
                             <div class="card-inner">
                                 <span class="card-placeholder">Table</span>
                             </div>
-                        }
-                    </div>
+                        </div>
+                    }
                 }
             </div>
         }
@@ -154,23 +113,23 @@ else
         }
         else
         {
-            if(_tagSelected){
-                <input type="text" class="tag-search" placeholder=_tagSelected />
-
+            if (_tagSelected)
+            {
                 <div class="tag-list">
                     @foreach (var doc in _previewDocs)
                     {
                         <button class="tag-item @(_selectedDoc?.Title == doc.Title ? "selected" : "")"
-                                @onclick="() => _selectedDoc = doc ">
+                                @onclick="() => _selectedDoc = doc">
                             <span class="tag-label">@doc.Title</span>
                         </button>
                     }
                 </div>
             }
-            else{
+            else
+            {
                 @* Search box *@
                 <input type="text" class="tag-search" placeholder="Search tags…"
-                    @bind="_tagSearch" @bind:event="oninput" />
+                       @bind="_tagSearch" @bind:event="oninput" />
 
                 <div class="tag-list">
                     @foreach (var tag in FilteredTags)
@@ -213,17 +172,12 @@ else
     private PaperlessDocument? _selectedDoc;
     private string _tagSearch = string.Empty;
 
-    // Preview shown inside the dialog after a tag is selected
-    private List<PaperlessDocument> _previewDocs  = [];
-    private int                     _previewCount;
+    // Preview in dialog
+    private List<PaperlessDocument> _previewDocs = [];
+    private int _previewCount;
 
-    // Per-card document cache: card.Id → list of documents / count
-    private Dictionary<Guid, List<PaperlessDocument>> _docMap    = [];
-    private Dictionary<Guid, int>                     _docCounts = [];
-
-    private Dictionary<Guid, PaperlessDocument> _cardDocMap = [];
-    // card.Id → base64 data URI of the document thumbnail
-    private Dictionary<Guid, string>            _thumbMap   = [];
+    // CardId -> DocCardModel instance (business logic holding PaperlessQuery and PaperlessDoc)
+    private Dictionary<Guid, DocCardModel> _docCards = [];
 
     private IEnumerable<PaperlessTag> FilteredTags =>
         string.IsNullOrWhiteSpace(_tagSearch)
@@ -246,7 +200,6 @@ else
         _loaded = true;
         StateHasChanged();
 
-        // Load documents for all Doc cards
         if (_page is not null)
             await LoadAllDocCardsAsync();
     }
@@ -254,33 +207,35 @@ else
     private async Task LoadAllDocCardsAsync()
     {
         if (_page is null) return;
+
         var tasks = _page.Cards
             .Where(c => c.Size == CardSize.Doc && c.DocId.HasValue)
-            .Select(c => LoadDocCardAsync(c));
+            .Select(c => LoadDocCardQueryAsync(c));
+
         await Task.WhenAll(tasks);
         StateHasChanged();
     }
 
-    private async Task LoadDocCardAsync(CardEntry card)
+    private async Task LoadDocCardQueryAsync(CardEntry card)
     {
         if (!card.DocId.HasValue) return;
 
-        // Fetch doc metadata and thumbnail in parallel
-        var docTask   = PaperlessService.GetDocumentByIdAsync(card.DocId.Value);
-        var thumbTask = PaperlessService.GetDocumentThumbnailAsync(card.DocId.Value);
-        var tagsTask  = PaperlessService.GetDocumentsByTagAsync(card.DocId.Value);
+        if (!_docCards.TryGetValue(card.Id, out var docCard))
+        {
+            var query = new PaperlessQuery(PaperlessService)
+            {
+                Type = QueryType.Tag,
+                TagSelected = new PaperlessTag
+                {
+                    Id = card.DocId.Value,
+                    Name = card.DocName ?? string.Empty
+                }
+            };
+            docCard = new DocCardModel(query, card.DocName);
+            _docCards[card.Id] = docCard;
+        }
 
-        await Task.WhenAll(docTask, thumbTask, tagsTask);
-
-        var (docs, total) = tagsTask.Result;
-        _docMap[card.Id]    = docs;
-        _docCounts[card.Id] = total;
-
-        if (docTask.Result is not null)
-            _cardDocMap[card.Id] = docTask.Result;
-
-        if (thumbTask.Result is not null)
-            _thumbMap[card.Id] = thumbTask.Result;
+        await docCard.InitializeAsync();
     }
 
     private void Refresh() => InvokeAsync(LoadPageAsync);
@@ -297,11 +252,8 @@ else
         _selectedTag = selectedTag;
         _tagSelected = true;
 
-        // await the async call — returns (List<PaperlessDocument>, int)
         var (docs, total) = await PaperlessService.GetDocumentsByTagAsync(selectedTag.Id);
-
-        // store in dialog-scoped preview fields (no card exists yet at this point)
-        _previewDocs  = docs;
+        _previewDocs = docs;
         _previewCount = total;
 
         StateHasChanged();
@@ -350,8 +302,7 @@ else
 
     private async Task DeleteCard(Guid cardId)
     {
-        _docMap.Remove(cardId);
-        _docCounts.Remove(cardId);
+        _docCards.Remove(cardId);
         await PageService.DeleteCardAsync(cardId);
     }
 
