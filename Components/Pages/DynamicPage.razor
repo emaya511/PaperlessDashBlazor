@@ -55,61 +55,30 @@
             <div class="card-grid">
                 @foreach (var card in _page.Cards)
                 {
-                    <div class="dash-card @(card.Size == CardSize.Table ? "card-table" : "card-doc")">
-
-                        @* Delete button *@
-                        <button class="btn-delete-card" title="Remove card"
-                                @onclick="() => DeleteCard(card.Id)"
-                                @onclick:stopPropagation="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                            </svg>
-                        </button>
-
-                        @if (card.Size == CardSize.Doc)
+                    @if (card.Size == CardSize.Doc)
+                    {
+                        @if (_docCards.TryGetValue(card.Id, out var docCard))
                         {
-                            @* Doc card: tag header + document list *@
-                            <div class="card-tag-header" style="background-color: @(card.TagColour ?? "#555")">
-                                <span class="card-tag-name">@(card.TagName ?? "Untagged")</span>
-                                @if (_docCounts.TryGetValue(card.Id, out var cnt))
-                                {
-                                    <span class="card-doc-count">@cnt</span>
-                                }
-                            </div>
-                            <div class="card-doc-list">
-                                @if (_docMap.TryGetValue(card.Id, out var docs))
-                                {
-                                    @if (docs.Count == 0)
-                                    {
-                                        <span class="no-docs">No documents</span>
-                                    }
-                                    else
-                                    {
-                                        @foreach (var doc in docs)
-                                        {
-                                            <a class="doc-item"
-                                               href="@PaperlessService.GetDocumentUrl(doc.Id)"
-                                               target="_blank"
-                                               title="@doc.Title">
-                                                @doc.Title
-                                            </a>
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    <span class="loading-docs">Loading…</span>
-                                }
-                            </div>
+                            <DocCard Card="docCard"
+                                     OnDelete="() => DeleteCard(card.Id)" />
                         }
-                        else
-                        {
+                    }
+                    else
+                    {
+                        <div class="dash-card card-table">
+                            <button class="btn-delete-card" title="Remove card"
+                                    @onclick="() => DeleteCard(card.Id)"
+                                    @onclick:stopPropagation="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                </svg>
+                            </button>
                             <div class="card-inner">
                                 <span class="card-placeholder">Table</span>
                             </div>
-                        }
-                    </div>
+                        </div>
+                    }
                 }
             </div>
         }
@@ -144,27 +113,42 @@ else
         }
         else
         {
-            @* Search box *@
-            <input type="text" class="tag-search" placeholder="Search tags…"
-                   @bind="_tagSearch" @bind:event="oninput" />
+            if (_tagSelected)
+            {
+                <div class="tag-list">
+                    @foreach (var doc in _previewDocs)
+                    {
+                        <button class="tag-item @(_selectedDoc?.Title == doc.Title ? "selected" : "")"
+                                @onclick="() => _selectedDoc = doc">
+                            <span class="tag-label">@doc.Title</span>
+                        </button>
+                    }
+                </div>
+            }
+            else
+            {
+                @* Search box *@
+                <input type="text" class="tag-search" placeholder="Search tags…"
+                       @bind="_tagSearch" @bind:event="oninput" />
 
-            <div class="tag-list">
-                @foreach (var tag in FilteredTags)
-                {
-                    <button class="tag-item @(_selectedTag?.Id == tag.Id ? "selected" : "")"
-                            @onclick="() => _selectedTag = tag">
-                        <span class="tag-dot" style="background:@tag.CssColour"></span>
-                        <span class="tag-label">@tag.Name</span>
-                        <span class="tag-count">@tag.DocumentCount docs</span>
-                    </button>
-                }
-            </div>
+                <div class="tag-list">
+                    @foreach (var tag in FilteredTags)
+                    {
+                        <button class="tag-item @(_selectedTag?.Id == tag.Id ? "selected" : "")"
+                                @onclick="() => OnTagSelectedAsync(tag)">
+                            <span class="tag-dot" style="background:@tag.CssColour"></span>
+                            <span class="tag-label">@tag.Name</span>
+                            <span class="tag-count">@tag.DocumentCount docs</span>
+                        </button>
+                    }
+                </div>
+            }
         }
 
         <div class="dialog-actions">
             <button class="btn-cancel" @onclick="CloseDocDialog">Cancel</button>
             <button class="btn-create" @onclick="ConfirmDocCard"
-                    disabled="@(_selectedTag is null || _savingCard)">
+                    disabled="@(_selectedDoc is null || _savingCard)">
                 @(_savingCard ? "Saving…" : "Add Card")
             </button>
         </div>
@@ -182,13 +166,18 @@ else
     private bool _showDocDialog;
     private bool _tagsLoading;
     private bool _savingCard;
+    private bool _tagSelected;
     private List<PaperlessTag> _tags = [];
     private PaperlessTag? _selectedTag;
+    private PaperlessDocument? _selectedDoc;
     private string _tagSearch = string.Empty;
 
-    // Per-card document cache: card.Id → list of documents / count
-    private Dictionary<Guid, List<PaperlessDocument>> _docMap = [];
-    private Dictionary<Guid, int> _docCounts = [];
+    // Preview in dialog
+    private List<PaperlessDocument> _previewDocs = [];
+    private int _previewCount;
+
+    // CardId -> DocCardModel instance (business logic holding PaperlessQuery and PaperlessDoc)
+    private Dictionary<Guid, DocCardModel> _docCards = [];
 
     private IEnumerable<PaperlessTag> FilteredTags =>
         string.IsNullOrWhiteSpace(_tagSearch)
@@ -211,7 +200,6 @@ else
         _loaded = true;
         StateHasChanged();
 
-        // Load documents for all Doc cards
         if (_page is not null)
             await LoadAllDocCardsAsync();
     }
@@ -219,19 +207,35 @@ else
     private async Task LoadAllDocCardsAsync()
     {
         if (_page is null) return;
+
         var tasks = _page.Cards
-            .Where(c => c.Size == CardSize.Doc && c.TagId.HasValue)
-            .Select(c => LoadDocCardAsync(c));
+            .Where(c => c.Size == CardSize.Doc && c.DocId.HasValue)
+            .Select(c => LoadDocCardQueryAsync(c));
+
         await Task.WhenAll(tasks);
         StateHasChanged();
     }
 
-    private async Task LoadDocCardAsync(CardEntry card)
+    private async Task LoadDocCardQueryAsync(CardEntry card)
     {
-        if (!card.TagId.HasValue) return;
-        var (docs, total) = await PaperlessService.GetDocumentsByTagAsync(card.TagId.Value);
-        _docMap[card.Id] = docs;
-        _docCounts[card.Id] = total;
+        if (!card.DocId.HasValue) return;
+
+        if (!_docCards.TryGetValue(card.Id, out var docCard))
+        {
+            var query = new PaperlessQuery(PaperlessService)
+            {
+                Type = QueryType.Tag,
+                TagSelected = new PaperlessTag
+                {
+                    Id = card.DocId.Value,
+                    Name = card.DocName ?? string.Empty
+                }
+            };
+            docCard = new DocCardModel(query, card.DocName);
+            _docCards[card.Id] = docCard;
+        }
+
+        await docCard.InitializeAsync();
     }
 
     private void Refresh() => InvokeAsync(LoadPageAsync);
@@ -242,6 +246,18 @@ else
     private void ClosePicker() => _showPicker = false;
 
     // ── Doc dialog ────────────────────────────────────────────────────────
+
+    private async Task OnTagSelectedAsync(PaperlessTag selectedTag)
+    {
+        _selectedTag = selectedTag;
+        _tagSelected = true;
+
+        var (docs, total) = await PaperlessService.GetDocumentsByTagAsync(selectedTag.Id);
+        _previewDocs = docs;
+        _previewCount = total;
+
+        StateHasChanged();
+    }
 
     private async Task OpenDocDialog()
     {
@@ -265,10 +281,10 @@ else
 
     private async Task ConfirmDocCard()
     {
-        if (_selectedTag is null || _page is null) return;
+        if (_selectedDoc is null || _page is null) return;
         _savingCard = true;
         await PageService.AddDocCardAsync(
-            _page.Id, _selectedTag.Id, _selectedTag.Name, _selectedTag.CssColour);
+            _page.Id, _selectedDoc.Id, _selectedDoc.Title ?? string.Empty);
         _savingCard = false;
         CloseDocDialog();
     }
@@ -286,8 +302,7 @@ else
 
     private async Task DeleteCard(Guid cardId)
     {
-        _docMap.Remove(cardId);
-        _docCounts.Remove(cardId);
+        _docCards.Remove(cardId);
         await PageService.DeleteCardAsync(cardId);
     }
 

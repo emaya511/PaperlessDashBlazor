@@ -1,0 +1,160 @@
+.dash-card {
+    border-radius: 10px;
+    background: #1e1e2e;
+    border: 1px solid rgba(255,255,255,0.12);
+    overflow: hidden;
+    position: relative;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.dash-card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    border-color: rgba(255,255,255,0.28);
+}
+
+.card-doc {
+    grid-column: span 1;
+    grid-row: span 1;
+    height: 100%;
+}
+
+.btn-delete-card {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0);
+    border: none;
+    color: rgba(255,255,255,0);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+    z-index: 10;
+    padding: 0;
+}
+
+.dash-card:hover .btn-delete-card {
+    background: rgba(220, 50, 50, 0.25);
+    color: rgba(255, 100, 100, 0.9);
+}
+
+.btn-delete-card:hover {
+    background: rgba(220, 50, 50, 0.7) !important;
+    color: white !important;
+}
+
+.card-tag-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.4rem 0.6rem;
+    flex-shrink: 0;
+}
+
+.card-tag-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.85);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 2.5rem);
+}
+
+.card-doc-count {
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: rgba(0,0,0,0.35);
+    color: white;
+    border-radius: 10px;
+    padding: 1px 6px;
+    flex-shrink: 0;
+}
+
+.card-doc-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.3rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.doc-row {
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.doc-row:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+.doc-row.doc-selected {
+    background: rgba(255,255,255,0.16);
+    border-left: 2px solid #64b5f6;
+}
+
+.doc-item {
+    display: block;
+    font-size: 0.72rem;
+    color: #b0c4de;
+    text-decoration: none;
+    padding: 0.25rem 0.3rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.doc-item:hover {
+    color: white;
+}
+
+.no-docs,
+.loading-docs {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.35);
+    font-style: italic;
+    padding: 0.5rem 0.3rem;
+}
+
+.card-thumb-wrapper {
+    flex-shrink: 0;
+    width: 100%;
+    height: 110px;
+    overflow: hidden;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.card-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    display: block;
+}
+
+.card-thumb-loading {
+    background: linear-gradient(
+        90deg,
+        rgba(255,255,255,0.04) 25%,
+        rgba(255,255,255,0.10) 50%,
+        rgba(255,255,255,0.04) 75%
+    );
+    background-size: 200% 100%;
+    animation: thumb-shimmer 1.4s infinite;
+}
+
+@keyframes thumb-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+

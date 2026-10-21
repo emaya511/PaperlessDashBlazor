@@ -1,0 +1,119 @@
+@using PaperlessDashBlazor.Services
+@inject PaperlessService PaperlessService
+@implements IDisposable
+
+<div class="dash-card card-doc">
+    @* Delete button *@
+    @if (OnDelete.HasDelegate)
+    {
+        <button class="btn-delete-card" title="Remove card"
+                @onclick="HandleDeleteAsync"
+                @onclick:stopPropagation="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+            </svg>
+        </button>
+    }
+
+    @* Card header *@
+    <div class="card-tag-header">
+        <span class="card-tag-name">@(Card?.Title ?? "Untagged")</span>
+        @if (Card?.Query is not null)
+        {
+            <span class="card-doc-count">@Card.Query.TotalCount</span>
+        }
+    </div>
+
+    @* Document list *@
+    @*
+    <div class="card-doc-list">
+        @if (Card?.Query is null || Card.Query.IsLoading)
+        {
+            <span class="loading-docs">Loading…</span>
+        }
+        else if (Card.Query.Documents.Count == 0)
+        {
+            <span class="no-docs">No documents</span>
+        }
+        else
+        {
+            @foreach (var doc in Card.Query.Documents)
+            {
+                <div class="doc-row @(Card.SelectedDoc?.Id == doc.Id ? "doc-selected" : "")"
+                     @onclick="() => SelectDocAsync(doc)">
+                    <a class="doc-item"
+                       href="@PaperlessService.GetDocumentUrl(doc.Id)"
+                       target="_blank"
+                       title="@doc.Title"
+                       @onclick:stopPropagation="true">
+                        @doc.Title
+                    </a>
+                </div>
+            }
+        }
+    </div>
+    *@
+    
+
+    @* Thumbnail preview of selected doc *@
+    @if (Card?.SelectedDocThumbnail is not null)
+    {
+        <div class="card-thumb-wrapper">
+            <img class="card-thumb" src="@Card.SelectedDocThumbnail" alt="@(Card.SelectedDoc?.Title ?? "document")" />
+        </div>
+    }
+    else if (Card?.Query?.IsLoading == true)
+    {
+        <div class="card-thumb-wrapper card-thumb-loading"></div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DocCardModel Card { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnDelete { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (Card is not null)
+        {
+            Card.OnChange += StateHasChanged;
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Card is not null)
+        {
+            Card.OnChange -= StateHasChanged;
+            Card.OnChange += StateHasChanged;
+        }
+    }
+
+    private async Task SelectDocAsync(PaperlessDocument doc)
+    {
+        if (Card is not null)
+        {
+            await Card.SelectDocumentAsync(doc);
+        }
+    }
+
+    private async Task HandleDeleteAsync()
+    {
+        if (OnDelete.HasDelegate)
+        {
+            await OnDelete.InvokeAsync();
+        }
+    }
+
+    public void Dispose()
+    {
+        if (Card is not null)
+        {
+            Card.OnChange -= StateHasChanged;
+        }
+    }
+}

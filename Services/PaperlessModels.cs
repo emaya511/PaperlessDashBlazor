@@ -71,3 +71,5 @@ public class PaperlessDocument
     [JsonPropertyName("tags")]
     public List<int> Tags { get; set; } = [];
 }
+
+

@@ -17,9 +17,8 @@ public class CardEntry
     public CardSize Size { get; set; }
 
     // Paperless-NGX tag filter (only used when Size == Doc)
-    public int? TagId { get; set; }
-    public string? TagName { get; set; }
-    public string? TagColour { get; set; }   // CSS hex colour, e.g. "#1f78b4"
+    public int? DocId { get; set; }
+    public string? DocName { get; set; }
 
     // Foreign key + navigation back to the page
     public Guid PageId { get; set; }
