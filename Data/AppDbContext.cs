@@ -1,16 +1,15 @@
 using Microsoft.EntityFrameworkCore;
-using PaperlessDashBlazor.Services;
 
 namespace PaperlessDashBlazor.Data;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-    public DbSet<DynamicPageEntry> Pages { get; set; }
-    public DbSet<CardEntry> Cards { get; set; }
+    public DbSet<PageEntity> Pages { get; set; }
+    public DbSet<CardEntity> Cards { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<DynamicPageEntry>(entity =>
+        modelBuilder.Entity<PageEntity>(entity =>
         {
             entity.HasKey(p => p.Id);
             entity.HasIndex(p => p.Slug).IsUnique();
@@ -23,11 +22,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                   .OnDelete(DeleteBehavior.Cascade);
         });
 
-        modelBuilder.Entity<CardEntry>(entity =>
+        modelBuilder.Entity<CardEntity>(entity =>
         {
             entity.HasKey(c => c.Id);
-            entity.Property(c => c.Size)
-                  .HasConversion<string>(); // store as "Square"/"Wide" string
         });
     }
 }

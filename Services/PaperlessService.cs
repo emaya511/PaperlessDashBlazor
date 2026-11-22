@@ -1,5 +1,5 @@
-using System.Net.Http.Headers;
 using System.Text.Json;
+using PaperlessDashBlazor.Models;
 
 namespace PaperlessDashBlazor.Services;
 
@@ -49,20 +49,6 @@ public class PaperlessService
         }
     }
 
-    /// <summary>Returns a single document by its ID, or null if not found.</summary>
-    public async Task<PaperlessDocument?> GetDocumentByIdAsync(int documentId)
-    {
-        try
-        {
-            var response = await _http.GetStringAsync($"api/documents/{documentId}/");
-            return JsonSerializer.Deserialize<PaperlessDocument>(response, _json);
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
     /// <summary>Returns the URL to open a document directly in Paperless-NGX.</summary>
     public string GetDocumentUrl(int documentId) =>
         $"{_http.BaseAddress}documents/{documentId}/details/";
@@ -71,8 +57,7 @@ public class PaperlessService
 
     /// <summary>
     /// Fetches the thumbnail image for a document and returns it as a
-    /// base64 data URI (e.g. "data:image/jpeg;base64,…") ready for &lt;img src&gt;.
-    /// Returns null if the request fails.
+    /// base64 data URI ready for &lt;img src&gt;.  Returns null on failure.
     /// </summary>
     public async Task<string?> GetDocumentThumbnailAsync(int documentId)
     {
@@ -87,4 +72,3 @@ public class PaperlessService
         }
     }
 }
-

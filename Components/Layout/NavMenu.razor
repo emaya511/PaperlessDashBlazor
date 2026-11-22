@@ -1,5 +1,4 @@
-@using PaperlessDashBlazor.Services
-@inject PageService PageService
+@inject PaperlessDash Dash
 @inject NavigationManager Navigation
 @implements IDisposable
 @rendermode InteractiveServer
@@ -20,8 +19,8 @@
             </NavLink>
         </div>
 
-        @* Dynamic pages loaded from DB *@
-        @foreach (var page in _pages)
+        @* Dynamic pages from Dash model *@
+        @foreach (var page in Dash.Pages)
         {
             <div class="nav-item px-3 nav-page-row">
                 <NavLink class="nav-link nav-page-link" href="@($"pages/{page.Slug}")">
@@ -71,29 +70,23 @@
 }
 
 @code {
+    // ── UI-only dialog state ──────────────────────────────────────────────
     private bool _showDialog;
     private bool _saving;
     private string _newPageTitle = string.Empty;
     private ElementReference _inputRef;
-    private List<DynamicPageEntry> _pages = [];
+
+    // ── Lifecycle ─────────────────────────────────────────────────────────
 
     protected override async Task OnInitializedAsync()
     {
-        PageService.OnChange += OnPageListChanged;
-        await LoadPagesAsync();
+        Dash.OnChange += OnDashChanged;
+        await Dash.EnsureLoadedAsync();
     }
 
-    private async Task LoadPagesAsync()
-    {
-        _pages = await PageService.GetPagesAsync();
-        StateHasChanged();
-    }
+    private void OnDashChanged() => InvokeAsync(StateHasChanged);
 
-    private void OnPageListChanged()
-    {
-        // Re-query DB on change notification
-        InvokeAsync(LoadPagesAsync);
-    }
+    // ── Dialog ────────────────────────────────────────────────────────────
 
     private void OpenDialog()
     {
@@ -112,7 +105,7 @@
         if (string.IsNullOrWhiteSpace(_newPageTitle) || _saving) return;
 
         _saving = true;
-        var page = await PageService.AddPageAsync(_newPageTitle.Trim());
+        var page = await Dash.AddPageAsync(_newPageTitle.Trim());
         _saving = false;
         CloseDialog();
         Navigation.NavigateTo($"pages/{page.Slug}");
@@ -124,10 +117,12 @@
         else if (e.Key == "Escape") CloseDialog();
     }
 
+    // ── Delete ────────────────────────────────────────────────────────────
+
     private async Task DeletePage(Guid pageId)
     {
-        var page = _pages.FirstOrDefault(p => p.Id == pageId);
-        await PageService.DeletePageAsync(pageId);
+        var page = Dash.Pages.FirstOrDefault(p => p.Id == pageId);
+        await Dash.DeletePageAsync(pageId);
 
         // Navigate home if we just deleted the page we're on
         if (page is not null && Navigation.Uri.Contains(page.Slug))
@@ -136,6 +131,6 @@
 
     public void Dispose()
     {
-        PageService.OnChange -= OnPageListChanged;
+        Dash.OnChange -= OnDashChanged;
     }
 }

@@ -1,20 +1,19 @@
 @page "/pages/{Slug}"
-@using PaperlessDashBlazor.Services
-@inject PageService PageService
+@inject PaperlessDash Dash
 @inject PaperlessService PaperlessService
 @rendermode InteractiveServer
 @implements IDisposable
 
-@if (_page is not null)
+@if (_currentPage is not null)
 {
-    <PageTitle>@_page.Title</PageTitle>
+    <PageTitle>@_currentPage.Title</PageTitle>
 
     <div class="dynamic-page" @onclick="ClosePicker">
 
         <div class="page-header">
-            <h1>@_page.Title</h1>
+            <h1>@_currentPage.Title</h1>
 
-            @* ── Add Card button + size picker ────────────────── *@
+            @* ── Add Card button + picker ────────────────────── *@
             <div class="add-card-wrapper" @onclick:stopPropagation="true">
                 <button class="btn-add-card" @onclick="TogglePicker" title="Add card">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -34,11 +33,6 @@
                                 <span>Doc</span>
                                 <small>1 × 1</small>
                             </button>
-                            <button class="size-option" @onclick="AddTableCard">
-                                <div class="size-preview table-preview"></div>
-                                <span>Table</span>
-                                <small>2 × 2</small>
-                            </button>
                         </div>
                     </div>
                 }
@@ -46,39 +40,17 @@
         </div>
 
         @* ── Card grid ────────────────────────────────────────── *@
-        @if (_page.Cards.Count == 0)
+        @if (_currentPage.Cards.Count == 0)
         {
             <p class="page-empty-hint">No cards yet. Click <strong>Add Card</strong> to get started.</p>
         }
         else
         {
             <div class="card-grid">
-                @foreach (var card in _page.Cards)
+                @foreach (var card in _currentPage.Cards)
                 {
-                    @if (card.Size == CardSize.Doc)
-                    {
-                        @if (_docCards.TryGetValue(card.Id, out var docCard))
-                        {
-                            <DocCard Card="docCard"
-                                     OnDelete="() => DeleteCard(card.Id)" />
-                        }
-                    }
-                    else
-                    {
-                        <div class="dash-card card-table">
-                            <button class="btn-delete-card" title="Remove card"
-                                    @onclick="() => DeleteCard(card.Id)"
-                                    @onclick:stopPropagation="true">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
-                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                                </svg>
-                            </button>
-                            <div class="card-inner">
-                                <span class="card-placeholder">Table</span>
-                            </div>
-                        </div>
-                    }
+                    <DocCard Card="card"
+                             OnDelete="() => DeleteCard(card.Id)" />
                 }
             </div>
         }
@@ -127,7 +99,6 @@ else
             }
             else
             {
-                @* Search box *@
                 <input type="text" class="tag-search" placeholder="Search tags…"
                        @bind="_tagSearch" @bind:event="oninput" />
 
@@ -158,11 +129,11 @@ else
 @code {
     [Parameter] public string Slug { get; set; } = string.Empty;
 
-    private DynamicPageEntry? _page;
+    private DashPage? _currentPage;
     private bool _showPicker;
     private bool _loaded;
 
-    // Doc dialog state
+    // ── Doc dialog state (UI-only) ────────────────────────────────────────
     private bool _showDocDialog;
     private bool _tagsLoading;
     private bool _savingCard;
@@ -171,13 +142,7 @@ else
     private PaperlessTag? _selectedTag;
     private PaperlessDocument? _selectedDoc;
     private string _tagSearch = string.Empty;
-
-    // Preview in dialog
     private List<PaperlessDocument> _previewDocs = [];
-    private int _previewCount;
-
-    // CardId -> DocCardModel instance (business logic holding PaperlessQuery and PaperlessDoc)
-    private Dictionary<Guid, DocCardModel> _docCards = [];
 
     private IEnumerable<PaperlessTag> FilteredTags =>
         string.IsNullOrWhiteSpace(_tagSearch)
@@ -188,7 +153,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        PageService.OnChange += Refresh;
+        Dash.OnChange += OnDashChanged;
         await LoadPageAsync();
     }
 
@@ -196,49 +161,31 @@ else
 
     private async Task LoadPageAsync()
     {
-        _page = await PageService.GetBySlugAsync(Slug);
-        _loaded = true;
-        StateHasChanged();
+        await Dash.EnsureLoadedAsync();
 
-        if (_page is not null)
-            await LoadAllDocCardsAsync();
-    }
+        // Unsubscribe from previous page
+        if (_currentPage is not null)
+            _currentPage.OnChange -= OnPageChanged;
 
-    private async Task LoadAllDocCardsAsync()
-    {
-        if (_page is null) return;
+        _currentPage = Dash.GetPageBySlug(Slug);
 
-        var tasks = _page.Cards
-            .Where(c => c.Size == CardSize.Doc && c.DocId.HasValue)
-            .Select(c => LoadDocCardQueryAsync(c));
-
-        await Task.WhenAll(tasks);
-        StateHasChanged();
-    }
-
-    private async Task LoadDocCardQueryAsync(CardEntry card)
-    {
-        if (!card.DocId.HasValue) return;
-
-        if (!_docCards.TryGetValue(card.Id, out var docCard))
+        if (_currentPage is not null)
         {
-            var query = new PaperlessQuery(PaperlessService)
-            {
-                Type = QueryType.Tag,
-                TagSelected = new PaperlessTag
-                {
-                    Id = card.DocId.Value,
-                    Name = card.DocName ?? string.Empty
-                }
-            };
-            docCard = new DocCardModel(query, card.DocName);
-            _docCards[card.Id] = docCard;
+            _currentPage.OnChange += OnPageChanged;
+            await _currentPage.EnsureCardsLoadedAsync();
         }
 
-        await docCard.InitializeAsync();
+        _loaded = true;
+        StateHasChanged();
     }
 
-    private void Refresh() => InvokeAsync(LoadPageAsync);
+    private void OnDashChanged() => InvokeAsync(() =>
+    {
+        _currentPage = Dash.GetPageBySlug(Slug);
+        StateHasChanged();
+    });
+
+    private void OnPageChanged() => InvokeAsync(StateHasChanged);
 
     // ── Picker ────────────────────────────────────────────────────────────
 
@@ -252,10 +199,8 @@ else
         _selectedTag = selectedTag;
         _tagSelected = true;
 
-        var (docs, total) = await PaperlessService.GetDocumentsByTagAsync(selectedTag.Id);
+        var (docs, _) = await PaperlessService.GetDocumentsByTagAsync(selectedTag.Id);
         _previewDocs = docs;
-        _previewCount = total;
-
         StateHasChanged();
     }
 
@@ -263,7 +208,9 @@ else
     {
         _showPicker = false;
         _selectedTag = null;
+        _selectedDoc = null;
         _tagSearch = string.Empty;
+        _tagSelected = false;
         _showDocDialog = true;
         _tagsLoading = true;
         StateHasChanged();
@@ -277,34 +224,31 @@ else
     {
         _showDocDialog = false;
         _selectedTag = null;
+        _selectedDoc = null;
+        _tagSelected = false;
     }
 
     private async Task ConfirmDocCard()
     {
-        if (_selectedDoc is null || _page is null) return;
+        if (_selectedDoc is null || _currentPage is null) return;
         _savingCard = true;
-        await PageService.AddDocCardAsync(
-            _page.Id, _selectedDoc.Id, _selectedDoc.Title ?? string.Empty);
+        await _currentPage.AddCardAsync(_selectedDoc.Id, _selectedDoc.Title ?? string.Empty);
         _savingCard = false;
         CloseDocDialog();
-    }
-
-    // ── Table card ────────────────────────────────────────────────────────
-
-    private async Task AddTableCard()
-    {
-        _showPicker = false;
-        if (_page is null) return;
-        await PageService.AddTableCardAsync(_page.Id);
     }
 
     // ── Delete ────────────────────────────────────────────────────────────
 
     private async Task DeleteCard(Guid cardId)
     {
-        _docCards.Remove(cardId);
-        await PageService.DeleteCardAsync(cardId);
+        if (_currentPage is null) return;
+        await _currentPage.DeleteCardAsync(cardId);
     }
 
-    public void Dispose() => PageService.OnChange -= Refresh;
+    public void Dispose()
+    {
+        Dash.OnChange -= OnDashChanged;
+        if (_currentPage is not null)
+            _currentPage.OnChange -= OnPageChanged;
+    }
 }
