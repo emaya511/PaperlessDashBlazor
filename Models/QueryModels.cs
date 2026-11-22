@@ -1,6 +1,6 @@
-using System.Text.Json.Serialization;
+using PaperlessDashBlazor.Services;
 
-namespace PaperlessDashBlazor.Services;
+namespace PaperlessDashBlazor.Models;
 
 public enum QueryType
 {
@@ -9,18 +9,14 @@ public enum QueryType
 }
 
 /// <summary>
-/// Encapsulates all query configuration, matched results, selected document,
+/// Encapsulates query configuration, results, selected document,
 /// and execution logic against PaperlessService.
-/// Keeps Razor components state-free, scalable, and independent.
+/// UI-agnostic — no Blazor references.
 /// </summary>
 public class PaperlessQuery
 {
     private readonly PaperlessService _paperless;
 
-    [JsonPropertyName("id")]
-    public Guid Id { get; set; } = Guid.NewGuid();
-
-    // ── Query Parameters / Search inputs ──────────────────────────────────
     public QueryType Type { get; set; } = QueryType.Tag;
 
     /// <summary>Selected tag when Type == QueryType.Tag</summary>
@@ -44,7 +40,7 @@ public class PaperlessQuery
     public PaperlessDocument? DocSelected { get; set; }
     public string? SelectedDocThumbnail { get; set; }
 
-    /// <summary>Event raised whenever state changes (e.g. results loaded, selection changed)</summary>
+    /// <summary>Event raised whenever state changes (results loaded, selection changed)</summary>
     public event Action? OnChange;
 
     public void NotifyChanged() => OnChange?.Invoke();
@@ -56,10 +52,6 @@ public class PaperlessQuery
 
     // ── Query Execution ───────────────────────────────────────────────────
 
-    /// <summary>
-    /// Runs or refreshes the query against PaperlessService.
-    /// Updates Documents, TotalCount, and default selection.
-    /// </summary>
     public async Task RunQueryAsync()
     {
         IsLoading = true;
@@ -80,7 +72,7 @@ public class PaperlessQuery
                 TotalCount = 0;
             }
 
-            // Auto-select first doc if none selected or previous selection no longer present
+            // Auto-select first doc if none selected or previous selection gone
             if (Documents.Count > 0 && (DocSelected is null || !Documents.Any(d => d.Id == DocSelected.Id)))
             {
                 await SelectDocumentAsync(Documents[0]);
@@ -104,9 +96,7 @@ public class PaperlessQuery
         }
     }
 
-    /// <summary>
-    /// Selects a document and loads its thumbnail preview dynamically.
-    /// </summary>
+    /// <summary>Selects a document and loads its thumbnail.</summary>
     public async Task SelectDocumentAsync(PaperlessDocument doc)
     {
         DocSelected = doc;
@@ -118,15 +108,5 @@ public class PaperlessQuery
             SelectedDocThumbnail = await _paperless.GetDocumentThumbnailAsync(doc.Id);
             NotifyChanged();
         }
-    }
-
-    /// <summary>
-    /// Helper to set Tag and run query in one call.
-    /// </summary>
-    public async Task SetTagAndRunAsync(PaperlessTag tag)
-    {
-        Type = QueryType.Tag;
-        TagSelected = tag;
-        await RunQueryAsync();
     }
 }

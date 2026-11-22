@@ -1,5 +1,3 @@
-@using PaperlessDashBlazor.Services
-@inject PaperlessService PaperlessService
 @implements IDisposable
 
 <div class="dash-card card-doc">
@@ -25,37 +23,6 @@
         }
     </div>
 
-    @* Document list *@
-    @*
-    <div class="card-doc-list">
-        @if (Card?.Query is null || Card.Query.IsLoading)
-        {
-            <span class="loading-docs">Loading…</span>
-        }
-        else if (Card.Query.Documents.Count == 0)
-        {
-            <span class="no-docs">No documents</span>
-        }
-        else
-        {
-            @foreach (var doc in Card.Query.Documents)
-            {
-                <div class="doc-row @(Card.SelectedDoc?.Id == doc.Id ? "doc-selected" : "")"
-                     @onclick="() => SelectDocAsync(doc)">
-                    <a class="doc-item"
-                       href="@PaperlessService.GetDocumentUrl(doc.Id)"
-                       target="_blank"
-                       title="@doc.Title"
-                       @onclick:stopPropagation="true">
-                        @doc.Title
-                    </a>
-                </div>
-            }
-        }
-    </div>
-    *@
-    
-
     @* Thumbnail preview of selected doc *@
     @if (Card?.SelectedDocThumbnail is not null)
     {
@@ -76,14 +43,6 @@
     [Parameter]
     public EventCallback OnDelete { get; set; }
 
-    protected override void OnInitialized()
-    {
-        if (Card is not null)
-        {
-            Card.OnChange += StateHasChanged;
-        }
-    }
-
     protected override void OnParametersSet()
     {
         if (Card is not null)
@@ -93,27 +52,15 @@
         }
     }
 
-    private async Task SelectDocAsync(PaperlessDocument doc)
-    {
-        if (Card is not null)
-        {
-            await Card.SelectDocumentAsync(doc);
-        }
-    }
-
     private async Task HandleDeleteAsync()
     {
         if (OnDelete.HasDelegate)
-        {
             await OnDelete.InvokeAsync();
-        }
     }
 
     public void Dispose()
     {
         if (Card is not null)
-        {
             Card.OnChange -= StateHasChanged;
-        }
     }
 }

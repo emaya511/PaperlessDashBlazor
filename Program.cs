@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using Microsoft.EntityFrameworkCore;
 using PaperlessDashBlazor.Components;
 using PaperlessDashBlazor.Data;
+using PaperlessDashBlazor.Models;
 using PaperlessDashBlazor.Services;
 
 // ── Load .env before builder so vars appear in IConfiguration ────────────
@@ -21,42 +22,43 @@ if (File.Exists(envFile))
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 // ── Razor / Blazor ────────────────────────────────────────────────────────
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// SQLite database — file stored next to the app
 // ── SQLite ────────────────────────────────────────────────────────────────
 var dbPath = Path.Combine(builder.Environment.ContentRootPath, "paperless-dash.db");
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));
 
-// PageService is scoped — one per Blazor circuit, uses IDbContextFactory
-builder.Services.AddScoped<PageService>();
+// ── Services ──────────────────────────────────────────────────────────────
+builder.Services.AddScoped<DashboardDbService>();
 
-// ── Paperless-NGX HTTP client ─────────────────────────────────────────────
 var paperlessUrl = builder.Configuration["PAPERLESS_URL"]
                    ?? Environment.GetEnvironmentVariable("PAPERLESS_URL")
                    ?? "http://localhost:8000";
-var paperlessKey = builder.Configuration["PAPERLESS_API_KEY"]
-                   ?? Environment.GetEnvironmentVariable("PAPERLESS_API_KEY")
-                   ?? string.Empty;
+var paperlessToken = builder.Configuration["PAPERLESS_API_TOKEN"]
+                     ?? Environment.GetEnvironmentVariable("PAPERLESS_API_TOKEN")
+                     ?? builder.Configuration["PAPERLESS_API_KEY"]
+                     ?? Environment.GetEnvironmentVariable("PAPERLESS_API_KEY")
+                     ?? string.Empty;
 
 builder.Services.AddHttpClient("paperless", client =>
 {
     client.BaseAddress = new Uri(paperlessUrl.TrimEnd('/') + "/");
-    if (!string.IsNullOrWhiteSpace(paperlessKey))
+    if (!string.IsNullOrWhiteSpace(paperlessToken))
         client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Token", paperlessKey);
+            new AuthenticationHeaderValue("Token", paperlessToken);
 });
 
 builder.Services.AddScoped<PaperlessService>();
 
+// ── Models (one per circuit) ──────────────────────────────────────────────
+builder.Services.AddScoped<PaperlessDash>();
+
 // ── App pipeline ──────────────────────────────────────────────────────────
 var app = builder.Build();
 
-// Auto-create DB tables on startup (no migration CLI needed)
 // Auto-create DB tables on startup
 using (var scope = app.Services.CreateScope())
 {
@@ -64,11 +66,9 @@ using (var scope = app.Services.CreateScope())
     db.Database.EnsureCreated();
 }
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);

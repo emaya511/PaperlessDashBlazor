@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace PaperlessDashBlazor.Services;
+namespace PaperlessDashBlazor.Models;
 
 // ── Generic paged response from Paperless-NGX ──────────────────────────────
 
@@ -71,5 +71,3 @@ public class PaperlessDocument
     [JsonPropertyName("tags")]
     public List<int> Tags { get; set; } = [];
 }
-
-
