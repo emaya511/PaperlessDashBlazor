@@ -32,13 +32,19 @@ public class CardEntity
     [ForeignKey(nameof(PageId))]
     public PageEntity Page { get; set; } = null!;
 
-    public List<QueryEntity> Query{ get; set; }  = [];
+    public List<QueryEntity> Queries{ get; set; }  = [];
 }
 
 public class QueryEntity
 {
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
+
     public string? TagSelected { get; set; }
+
+    public Guid CardId { get; set; }
+
+    [ForeignKey(nameof(CardId))]
+    public CardEntity Card { get; set; } = null!;
 
 }
