@@ -54,7 +54,9 @@ public class DashPage
                     Name = card.DocName ?? string.Empty
                 }
             };
-            Cards.Add(new DocCardModel(card.Id, query, card.DocName));
+            //Cards.Add(new DocCardModel(card.Id, query, card.DocName));
+
+            Cards.Add(new DocCardModel(card, _paperless));
         }
 
         // Initialize all cards in parallel (fetch docs + thumbnails)
@@ -74,7 +76,8 @@ public class DashPage
             Type = QueryType.Tag,
             TagSelected = new PaperlessTag { Id = docId, Name = docName }
         };
-        var card = new DocCardModel(cardEntity.Id, query, docName);
+        //var card = new DocCardModel(cardEntity.Id, query, docName);
+        var card = new DocCardModel(cardEntity, _paperless);
         await card.InitializeAsync();
         Cards.Add(card);
         OnChange?.Invoke();
